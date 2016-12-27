@@ -8,9 +8,10 @@ handlers:
 - url: /favicon\.ico
   static_files: favicon.ico
   upload: favicon\.ico
+  static_dir: static
 
 - url: .*
-  script: main.app
+  script: blog.app
 
 libraries:
 - name: webapp2
