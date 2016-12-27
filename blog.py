@@ -29,7 +29,13 @@ class TestHandler(BaseHandler):
 class FrontPage(BaseHandler):
     def get(self):
         self.render("front-page.html")
+
+
+class Signup(BaseHandler):
+    def get(self):
+        self.render()
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
-    ('/test', TestHandler)
+    ('/test', TestHandler),
+    ('/signup', Signup)
 ], debug=True)
