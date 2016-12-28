@@ -33,7 +33,7 @@ class FrontPage(BaseHandler):
 
 class Signup(BaseHandler):
     def get(self):
-        self.render()
+        self.render("signup.html")
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/test', TestHandler),
