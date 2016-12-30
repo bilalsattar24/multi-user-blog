@@ -35,6 +35,16 @@ class Signup(BaseHandler):
     def get(self):
         self.render("signup.html")
 
+    def post(self):
+        username = self.request.get("username")
+        password = self.request.get("password")
+        if username and password:
+            self.write("username: " + username)
+            self.write(" password: " + password)
+        else:
+            error = "no username and/or password"
+            self.render("signup.html", error = error)
+
 
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
