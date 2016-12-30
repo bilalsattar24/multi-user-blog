@@ -1,0 +1,13 @@
+.front-title {
+    color: black;
+}
+.center {
+    margin-left: auto;
+    margin-right: auto;
+}
+.error {
+    color: red;
+}
+.separator {
+    border-top: 4px solid #7d97ad;
+}
