@@ -62,11 +62,6 @@ class Signup(BaseHandler):
         return True
         #return false if username DOES exist
 
-
-
-
-
-
     def render_page(self, username="", password="", error=""):
         self.render("signup.html", username=username, password=password, error=error)
 
@@ -90,6 +85,7 @@ class Signup(BaseHandler):
                 error = "Password must be 8 characters or longer"
                 self.render_page(error=error)
             else:
+                #store new user in database
                 self.write("SUCCESS!")
             
         else:
