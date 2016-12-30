@@ -102,5 +102,5 @@ app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/test', TestHandler),
     ('/signup', Signup),
-    ('login', Login)
+    ('/login', Login)
 ], debug=True)
