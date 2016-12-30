@@ -72,6 +72,8 @@ class Signup(BaseHandler):
         username = self.request.get("username")
         password = self.request.get("password")#original password
         password2 = self.request.get("verify-password")#re-entered password
+        
+        #this block verifies all of the requirements for username and password
         if username and not password:
             error = "No password provided"
             self.render_page(error=error, username=username)
@@ -91,16 +93,15 @@ class Signup(BaseHandler):
             else:
                 #store new user in database
                 self.write("SUCCESS!")
-            
         else:
             error = "No username or password provided"
             self.render_page(error=error)
-
-
+        #----------------------------------------------------------------------
 
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/test', TestHandler),
     ('/signup', Signup),
-    ('/login', Login)
+    ('/login', Login),
+    ('/newpost', NewPost)
 ], debug=True)
