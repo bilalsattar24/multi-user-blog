@@ -89,7 +89,7 @@ class Signup(BaseHandler):
                 self.render_page(error=error)
             elif password != password2:
                 error = "Passwords don't match, try again"
-                self.render_page(error=error)
+                self.render_page(error=error, username=username)
             else:
                 #store new user in database
                 #salt + hash before storing password
