@@ -48,10 +48,25 @@ class FrontPage(BaseHandler):
 
 class Login(BaseHandler):
     def get(self):
-        self.render("")
+        self.render("login.html")
 
 
 class Signup(BaseHandler):
+    def verify_pass(self, pw):
+        if len(pw) >= 8:
+            return True
+        else:
+            return False
+    def verify_user(self, user):
+        #return true if username does not already exist in the database
+        return True
+        #return false if username DOES exist
+
+
+
+
+
+
     def render_page(self, username="", password="", error=""):
         self.render("signup.html", username=username, password=password, error=error)
 
@@ -61,12 +76,27 @@ class Signup(BaseHandler):
     def post(self):
         username = self.request.get("username")
         password = self.request.get("password")
-        if username and password:
-            self.write("username: " + username)
-            self.write("password: " + password)
+        if username and not password:
+            error = "No password entered"
+            self.render_page(error=error, username=username)
+        elif not username and password:
+            error = "No username provided"
+            self.render_page(error=error)
+        elif username and password:
+            if not self.verify_user(username):
+                error = "Username already exsists"
+                self.render_page(error=error)
+            elif not self.verify_pass(password):
+                error = "Password must be 8 characters or longer"
+                self.render_page(error=error)
+            else:
+                self.write("SUCCESS!")
+            
         else:
             error = "no username and/or password"
             self.render_page(error=error)
+
+
 
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
