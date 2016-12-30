@@ -22,6 +22,22 @@ class BaseHandler(webapp2.RequestHandler):
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
 
+#------------CLASSES FOR OBJECTS----------------------------------------------
+class User(db.Model):
+    name = db.StringProperty(required=True)
+    pw_hash = db.StringProperty(required=True)
+    email = db.StringProperty()
+
+
+
+class Post(db.Model):
+    user_id = db.IntegerProperty(required=True)
+    subject = db.StringProperty(required=True)
+    content = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+    last_modified = db.DateTimeProperty(auto_now=True)
+
+#------------HANDLERS---------------------------------------------------------
 class TestHandler(BaseHandler):
     def get(self):
         self.response.write('Test passed')
@@ -30,24 +46,31 @@ class FrontPage(BaseHandler):
     def get(self):
         self.render("front-page.html")
 
+class Login(BaseHandler):
+    def get(self):
+        self.render("")
+
 
 class Signup(BaseHandler):
+    def render_page(self, username="", password="", error=""):
+        self.render("signup.html", username=username, password=password, error=error)
+
     def get(self):
-        self.render("signup.html")
+        self.render_page()
 
     def post(self):
         username = self.request.get("username")
         password = self.request.get("password")
         if username and password:
             self.write("username: " + username)
-            self.write(" password: " + password)
+            self.write("password: " + password)
         else:
             error = "no username and/or password"
-            self.render("signup.html", error = error)
-
+            self.render_page(error=error)
 
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/test', TestHandler),
-    ('/signup', Signup)
+    ('/signup', Signup),
+    ('login', Login)
 ], debug=True)
