@@ -70,26 +70,30 @@ class Signup(BaseHandler):
 
     def post(self):
         username = self.request.get("username")
-        password = self.request.get("password")
+        password = self.request.get("password")#original password
+        password2 = self.request.get("verify-password")#re-entered password
         if username and not password:
-            error = "No password entered"
+            error = "No password provided"
             self.render_page(error=error, username=username)
         elif not username and password:
             error = "No username provided"
             self.render_page(error=error)
-        elif username and password:
+        elif username and password and password2:
             if not self.verify_user(username):
                 error = "Username already exsists"
                 self.render_page(error=error)
             elif not self.verify_pass(password):
                 error = "Password must be 8 characters or longer"
                 self.render_page(error=error)
+            elif password != password2:
+                error = "Passwords don't match, try again"
+                self.render_page(error=error)
             else:
                 #store new user in database
                 self.write("SUCCESS!")
             
         else:
-            error = "no username and/or password"
+            error = "No username or password provided"
             self.render_page(error=error)
 
 
