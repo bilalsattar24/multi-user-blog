@@ -98,6 +98,10 @@ class Signup(BaseHandler):
             self.render_page(error=error)
         #----------------------------------------------------------------------
 
+class NewPost(BaseHandler):
+    get(self):
+    self.render("newpost.html")
+
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/test', TestHandler),
