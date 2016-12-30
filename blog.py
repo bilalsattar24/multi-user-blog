@@ -92,6 +92,7 @@ class Signup(BaseHandler):
                 self.render_page(error=error)
             else:
                 #store new user in database
+                #salt + hash before storing password
                 self.write("SUCCESS!")
         else:
             error = "No username or password provided"
@@ -99,8 +100,8 @@ class Signup(BaseHandler):
         #----------------------------------------------------------------------
 
 class NewPost(BaseHandler):
-    get(self):
-    self.render("newpost.html")
+    def get(self):
+        self.render("newpost.html")
 
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
