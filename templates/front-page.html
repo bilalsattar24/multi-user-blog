@@ -14,7 +14,8 @@
     </div>
     {% for p in posts %}
     {{ p.render() | safe }}
-    <br><br>
+    <br>
+    <hr>
   {% endfor %}
 
 {% endblock %}
