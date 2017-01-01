@@ -220,6 +220,9 @@ class NewPost(BaseHandler):
     def get(self):
         if self.user:
             self.render("newpost.html", user=self.user)
+        else:
+            msg = "You need an account to post!"
+            self.render("signup.html", error=msg)
             
 
     def post(self):
