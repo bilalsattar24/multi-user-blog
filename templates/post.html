@@ -15,8 +15,8 @@
     <div class="small">
         {% if user %}
             <form method="post">
-                {{post_id}}
-                <div class="edit-delete col-sm-6"> <a href="/edit">Edit</a> <a href="/delete">Delete</a> </div>
+                
+                <div class="edit-delete col-sm-6"> <a href="/edit?postid={{post_id}}">Edit</a> <a href="/delete">Delete</a> {{post_id}} </div>
                 <div class="post-date col-sm-6">{{p.created.strftime("%B %d, %Y at %I:%M %p UTC by ")}}<strong>{{p.creator_name}}</strong></div>
         {% else %}
             <div class=col-sm-6></div>

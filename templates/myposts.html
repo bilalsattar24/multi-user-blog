@@ -13,7 +13,7 @@
         </div>
     </div>
     {% for post in posts %}
-        {{ post.render(user=user) | safe }}
+        {{ post.render(user=user, post_id=post.key().id()) | safe }}
         <hr>
     {% endfor %}
 {% endblock %}

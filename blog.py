@@ -127,7 +127,7 @@ class Post(db.Model):
 
     def render(self, user=None, post_id=None):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self, user=user)
+        return render_str("post.html", p = self, user=user, post_id=post_id)
 
 #------------HANDLERS---------------------------------------------------------
 class TestHandler(BaseHandler):
