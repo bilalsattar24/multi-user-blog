@@ -64,7 +64,6 @@ class BaseHandler(webapp2.RequestHandler):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
-        self.uid = uid
 
 #------------------------------------------------------------------------------
 def make_salt(length = 5):
@@ -214,7 +213,6 @@ class Signup(BaseHandler):
         else:
             error = "No username or password provided"
             self.render_page(error=error)
-#----------------------------------------------------------------------
 
 class NewPost(BaseHandler):
     def get(self):
@@ -257,6 +255,8 @@ class Logout(BaseHandler):
     def get(self):
         self.logout()
         self.redirect('/')
+
+#----------------------------------------------------------------------
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/test', TestHandler),

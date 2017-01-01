@@ -13,8 +13,8 @@
         </div>
     </div>
     {% for p in posts %}
-    {{ p.render() | safe }}
-    <hr>
+        {{ p.render() | safe }}
+        <hr>
   {% endfor %}
 
 {% endblock %}

@@ -10,7 +10,7 @@
         {{p._render_text | safe}}
     </div>
 
-    <div class="post-date">
-        {{p.created.strftime("%B %d, %Y at %I:%M %p UTC by " + p.creator_name)}}
+    <div class="post-date small">
+        {{p.created.strftime("%B %d, %Y at %I:%M %p UTC by ")}}<strong>{{p.creator_name}}</strong>
     </div>
 </div><!--post row-->
