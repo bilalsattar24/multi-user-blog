@@ -82,6 +82,9 @@ def valid_pw(name, password, h):
 def users_key(group = 'default'):
     return db.Key.from_path('users', group)
 
+def posts_key(group = 'default'):
+    return db.Key.from_path('posts', group)
+
 def blog_key(name = 'default'):
     return db.Key.from_path('blogs', name)
 
@@ -124,6 +127,10 @@ class Post(db.Model):
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
+
+    @classmethod
+    def by_id(cls, post_id):
+        return Post.get_by_id(post_id, parent = posts_key())
 
     def render(self, user=None, post_id=None):
         self._render_text = self.content.replace('\n', '<br>')
@@ -245,8 +252,6 @@ class Myposts(BaseHandler):
         query = "select * from Post where creator_name='" + self.user.name + "'"
         print query
         myposts = db.GqlQuery(query)
-        for post in myposts:
-            print str(post.key().id())
         self.render("myposts.html", posts=myposts, user=self.user)
 
 class Users(BaseHandler):
@@ -261,6 +266,24 @@ class Logout(BaseHandler):
         self.logout()
         self.redirect('/')
 
+class EditPost(BaseHandler):
+    def get(self):
+        post_id = self.request.get("post_id")
+        posts = db.GqlQuery("select * from Post")
+        subject = ""
+        content = ""
+        for post in posts:
+            if post_id == str(post.key().id()):
+                subject = post.subject
+                content = post.content
+                break
+                
+        self.render("newpost.html", content=content, subject=subject, user=self.user)
+
+class DeletePost(BaseHandler):
+    def get(self):
+        post_id = self.requet.get("post_id")
+        print post_id
 #----------------------------------------------------------------------
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
@@ -269,6 +292,8 @@ app = webapp2.WSGIApplication([
     ('/login', Login),
     ('/myposts', Myposts),
     ('/newpost', NewPost),
+    ('/edit', EditPost),
+    ('/delete', DeletePost),
     ('/logout', Logout),
     ('/users', Users)
 ], debug=True)
