@@ -5,6 +5,8 @@ import time
 from string import letters
 import webapp2
 import jinja2
+import random
+import hmac
 import hashlib
 from google.appengine.ext import db
 
@@ -17,11 +19,11 @@ secret = "thisIsASecret"
 def make_hash(original):
     return hashlib.sha256(secret + original).hexdigest()
 
-def make_secure_val(str):
-    return "%s,%s" % (str, make_hash(original))
+def make_secure_val(val):
+    return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
 
 def check_secure_val(secure_val):
-    val = h.split('|')[0]
+    val = secure_val.split('|')[0]
     if secure_val == make_secure_val(val):
         return val
 
@@ -30,7 +32,7 @@ def check_secure_val(secure_val):
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
-
+#------------------------------------------------------------
 #base class for handler. other handlers inherit from 
 class BaseHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
@@ -58,10 +60,34 @@ class BaseHandler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
-    #def initialize(self, *a, **kw):
-        #webapp2.RequestHandler.initialize(self, *a, **kw)
-        #uid = self.read_secure_cookie('user-id')
-        #self.user = uid and User.by_id(int(uid))
+    def initialize(self, *a, **kw):
+        webapp2.RequestHandler.initialize(self, *a, **kw)
+        uid = self.read_secure_cookie('user-id')
+        self.user = uid and User.by_id(int(uid))
+
+#------------------------------------------------------------------------------
+def make_salt(length = 5):
+    return ''.join(random.choice(letters) for x in xrange(length))
+
+def make_pw_hash(name, pw, salt = None):
+    if not salt:
+        salt = make_salt()
+    h = hashlib.sha256(name + pw + salt).hexdigest()
+    return '%s,%s' % (salt, h)
+
+def valid_pw(name, password, h):
+    salt = h.split(',')[0]
+    return h == make_pw_hash(name, password, salt)
+
+def users_key(group = 'default'):
+    return db.Key.from_path('users', group)
+
+def blog_key(name = 'default'):
+    return db.Key.from_path('blogs', name)
+
+
+
+
 
 #------------CLASSES FOR OBJECTS----------------------------------------------
 class User(db.Model):
@@ -69,6 +95,27 @@ class User(db.Model):
     pw_hash = db.StringProperty(required=True)
     email = db.StringProperty()
 
+    @classmethod
+    def by_id(cls, uid):
+        return User.get_by_id(uid, parent = users_key())
+
+    @classmethod
+    def by_name(cls, name):
+        u = User.all().filter('name =', name).get()
+        return u
+
+    @classmethod
+    def register(cls, name, pw):
+        pw_hash = make_pw_hash(name, pw)
+        return User(parent = users_key(),
+                    name = name,
+                    pw_hash = pw_hash)
+
+    @classmethod
+    def login(cls, name, pw):
+        u = cls.by_name(name)
+        if u and valid_pw(name, pw, u.pw_hash):
+            return u
 
 
 class Post(db.Model):
@@ -91,11 +138,25 @@ class FrontPage(BaseHandler):
     
     def get(self):
         posts = db.GqlQuery("select * from Post order by created desc")
-        self.render("front-page.html", posts=posts)
+        if not self.user:
+            self.render("front-page.html", posts=posts)
+        else:
+            self.render("front-page.html", user=self.user.name)
 
 class Login(BaseHandler):
     def get(self):
         self.render("login.html")
+    def post(self):
+        username = self.request.get('username')
+        password = self.request.get('password')
+
+        u = User.login(username, password)
+        if u:
+            self.login(u)
+            self.redirect('/')
+        else:
+            msg = 'Invalid login'
+            self.render('login.html', error = msg)
 
 
 class Signup(BaseHandler):
@@ -105,9 +166,12 @@ class Signup(BaseHandler):
         else:
             return False
     def verify_user(self, user):
-        #return true if username does not already exist in the database
-        return True
-        #return false if username DOES exist
+        #u = User.by_name(self.username)
+        #if u:#user already exists, return false. do not allow user to make new account with that username
+            #return False
+        #else: 
+            return True#return true to allow user to add username to database
+        
 
     def render_page(self, username="", password="", error=""):
         self.render("signup.html", username=username, password=password, error=error)
@@ -140,17 +204,22 @@ class Signup(BaseHandler):
             else:
                 #store new user in database
                 #salt + hash before storing password
-                self.write("SUCCESS!")
+                u = User.register(username, password)
+                u.put()
+                self.login(u)
+                self.redirect('/')
+
         else:
             error = "No username or password provided"
             self.render_page(error=error)
-        #----------------------------------------------------------------------
+#----------------------------------------------------------------------
 
 class NewPost(BaseHandler):
     def get(self):
         self.render("newpost.html")
 
     def post(self):
+
         subject = self.request.get("subject")
         content = self.request.get("content")
         p = Post(user_id=1,subject=subject, content=content)
@@ -164,10 +233,16 @@ class NewPost(BaseHandler):
         #self.write("<br>")
         #self.write(p.user_id)
         #p.put()
+
+class Welcome(BaseHandler):
+    def get(self):
+        self.render("welcome.html")
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/test', TestHandler),
     ('/signup', Signup),
     ('/login', Login),
-    ('/newpost', NewPost)
+    ('/welcome', Welcome),
+    ('/newpost', NewPost),
+    ('/logout', Logout)
 ], debug=True)
