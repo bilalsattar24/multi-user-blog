@@ -4,7 +4,7 @@
 
     <div class="row">
         <div class="col-md-12 text-center">
-            <h1>Blog Front Page</h1>
+            <h1>Posts Submitted By Me</h1>
         </div>
     </div>
     <div class="row">
@@ -12,9 +12,8 @@
             <hr class="separator">
         </div>
     </div>
-    {% for p in posts %}
-        {{ p.render() | safe }}
+    {% for post in posts %}
+        {{ post.render(user=user) | safe }}
         <hr>
     {% endfor %}
-
 {% endblock %}

@@ -125,9 +125,9 @@ class Post(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
 
-    def render(self):
+    def render(self, user=None, post_id=None):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        return render_str("post.html", p = self, user=user)
 
 #------------HANDLERS---------------------------------------------------------
 class TestHandler(BaseHandler):
@@ -240,9 +240,14 @@ class NewPost(BaseHandler):
         #self.write(p.user_id)
         #p.put()
 
-class Welcome(BaseHandler):
+class Myposts(BaseHandler):
     def get(self):
-        self.render("welcome.html")
+        query = "select * from Post where creator_name='" + self.user.name + "'"
+        print query
+        myposts = db.GqlQuery(query)
+        for post in myposts:
+            print str(post.key().id())
+        self.render("myposts.html", posts=myposts, user=self.user)
 
 class Users(BaseHandler):
     def get(self):
@@ -262,7 +267,7 @@ app = webapp2.WSGIApplication([
     ('/test', TestHandler),
     ('/signup', Signup),
     ('/login', Login),
-    ('/welcome', Welcome),
+    ('/myposts', Myposts),
     ('/newpost', NewPost),
     ('/logout', Logout),
     ('/users', Users)
