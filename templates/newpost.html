@@ -13,6 +13,7 @@
         </div>
     </div>
     <form method="post">
+        <input type="hidden" name="creator_name" value="{{user.name}}">
         <div class="form-group">
             <label for="subject">Subject:</label>
             <input type="text" name="subject" class="form-control" value="{{subject}}" placeholder="Subject">

@@ -5,9 +5,6 @@
     <div class="row">
         <div class="col-md-12 text-center">
             <h1>Blog Front Page</h1>
-            {% if username %}
-            {{username}}
-            {% endif %}
         </div>
     </div>
     <div class="row">
@@ -16,7 +13,7 @@
         </div>
     </div>
     {% for p in posts %}
-    {{ p.render() | safe }}
+    {{ p.render(user) | safe }}
     <hr>
   {% endfor %}
 

@@ -52,8 +52,6 @@ class BaseHandler(webapp2.RequestHandler):
         )
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
-        print "cookie-val: "
-        print cookie_val
         return cookie_val and check_secure_val(cookie_val)
 
     def login(self, user):
@@ -66,6 +64,7 @@ class BaseHandler(webapp2.RequestHandler):
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
+        self.uid = uid
 
 #------------------------------------------------------------------------------
 def make_salt(length = 5):
@@ -121,15 +120,15 @@ class User(db.Model):
 
 
 class Post(db.Model):
-    user_id = db.IntegerProperty(required=True)
+    creator_name = db.StringProperty(required=True)
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
 
-    def render(self):
+    def render(self, user):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        return render_str("post.html", p = self, user=user)
 
 #------------HANDLERS---------------------------------------------------------
 class TestHandler(BaseHandler):
@@ -141,7 +140,7 @@ class FrontPage(BaseHandler):
     def get(self):
         posts = db.GqlQuery("select * from Post order by created desc")
         if self.user:
-            self.render("front-page.html", posts=posts,username = self.user.name)
+            self.render("front-page.html", posts=posts, user = self.user)
         else:
             self.render("front-page.html", posts=posts)
 
@@ -158,7 +157,8 @@ class Login(BaseHandler):
             self.redirect('/')
         else:
             msg = 'Invalid login'
-            self.render('login.html', error = msg)
+
+            self.render('login.html', error = msg, username=username)
 
 
 class Signup(BaseHandler):
@@ -167,12 +167,12 @@ class Signup(BaseHandler):
             return True
         else:
             return False
-    def verify_user(self, user):
-        #u = User.by_name(self.username)
-        #if u:#user already exists, return false. do not allow user to make new account with that username
-            #return False
-        #else: 
-            return True#return true to allow user to add username to database
+    def user_exists(self, username):
+        users = db.GqlQuery("select * from User")
+        for user in users:
+            if user.name == username:
+                return True
+        return False
         
 
     def render_page(self, username="", password="", error=""):
@@ -194,7 +194,7 @@ class Signup(BaseHandler):
             error = "No username provided"
             self.render_page(error=error)
         elif username and password and password2:
-            if not self.verify_user(username):
+            if self.user_exists(username):
                 error = "Username already exsists"
                 self.render_page(error=error)
             elif not self.verify_pass(password):
@@ -218,13 +218,16 @@ class Signup(BaseHandler):
 
 class NewPost(BaseHandler):
     def get(self):
-        self.render("newpost.html")
+        if self.user:
+            self.render("newpost.html", user=self.user)
+            
 
     def post(self):
 
         subject = self.request.get("subject")
         content = self.request.get("content")
-        p = Post(user_id=1,subject=subject, content=content)
+        creator = self.request.get("creator_name")
+        p = Post(subject=subject, content=content, creator_name=creator)
         p.put()
         time.sleep(2)#allows time for database to store new information to be displayed on front page
         self.redirect("/")

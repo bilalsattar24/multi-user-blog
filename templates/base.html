@@ -15,7 +15,12 @@
         <div class="container-fluid">
             <div class="navbar-header">
                 <div class="navbar-brand">
-                    <a class="front-title" href="/">Multi User Blog</a>
+                    {% if user %}
+                        <div class="logged-in-name">{{user.name}}</div>
+                    {% else %}
+                        <a class="front-title" href="/">Multi User Blog</a>
+                    {% endif %}
+                    
                 </div>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
@@ -23,11 +28,12 @@
                     <li><a href="/">Home</a></li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
-                    {% if username %}
-                    <li><a href="/logout">Log Out</a></li>
+                    {% if user %}
+                        <li><a href="/newpost">Submit Post</a></li>
+                        <li><a style="color: red;" href="/logout">Log Out</a></li>
                     {% else %}
-                    <li><a href="/login">Log In</a></li>
-                    <li><a href="/signup">Sign Up</a></li>
+                        <li><a href="/login">Log In</a></li>
+                        <li><a href="/signup">Sign Up</a></li>
                     {% endif %}
                 </ul>
             </div>
