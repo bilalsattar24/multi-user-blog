@@ -126,9 +126,9 @@ class Post(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
 
-    def render(self, user):
+    def render(self):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self, user=user)
+        return render_str("post.html", p = self)
 
 #------------HANDLERS---------------------------------------------------------
 class TestHandler(BaseHandler):
@@ -229,7 +229,7 @@ class NewPost(BaseHandler):
         creator = self.request.get("creator_name")
         p = Post(subject=subject, content=content, creator_name=creator)
         p.put()
-        time.sleep(2)#allows time for database to store new information to be displayed on front page
+        time.sleep(1)#allows time for database to store new information to be displayed on front page
         self.redirect("/")
         #self.write("content: " + p.content)
         #self.write("<br>subject: " + p.subject)
