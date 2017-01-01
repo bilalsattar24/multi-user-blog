@@ -52,6 +52,8 @@ class BaseHandler(webapp2.RequestHandler):
         )
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
+        print "cookie-val: "
+        print cookie_val
         return cookie_val and check_secure_val(cookie_val)
 
     def login(self, user):
@@ -61,8 +63,10 @@ class BaseHandler(webapp2.RequestHandler):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
     def initialize(self, *a, **kw):
+
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user-id')
+
         self.user = uid and User.by_id(int(uid))
 
 #------------------------------------------------------------------------------
@@ -139,9 +143,11 @@ class FrontPage(BaseHandler):
     def get(self):
         posts = db.GqlQuery("select * from Post order by created desc")
         if not self.user:
+            
             self.render("front-page.html", posts=posts)
         else:
-            self.render("front-page.html", user=self.user.name)
+            
+            self.render("front-page.html", post=posts, user=self.user.name)
 
 class Login(BaseHandler):
     def get(self):
@@ -237,6 +243,11 @@ class NewPost(BaseHandler):
 class Welcome(BaseHandler):
     def get(self):
         self.render("welcome.html")
+
+class Logout(BaseHandler):
+    def get(self):
+        self.logout()
+        self.redirect('/')
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/test', TestHandler),
