@@ -22,6 +22,17 @@
     color: green;
 }
 .edit-delete {
-    text-align: left
+    text-align: left;
+    float: left;
 }
-
+.lefty {
+    float: left;
+}
+#second {
+    padding-left: 2%;
+}
+.post-separator {
+    border-top: 1px solid;
+    margin-right: 1%;
+    margin-left: 1%;
+}
