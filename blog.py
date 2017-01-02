@@ -250,7 +250,6 @@ class NewPost(BaseHandler):
 class Myposts(BaseHandler):
     def get(self):
         query = "select * from Post where creator_name='" + self.user.name + "'"
-        print query
         myposts = db.GqlQuery(query)
         self.render("myposts.html", posts=myposts, user=self.user)
 
@@ -278,7 +277,26 @@ class EditPost(BaseHandler):
                 content = post.content
                 break
                 
-        self.render("newpost.html", content=content, subject=subject, user=self.user)
+        self.render("editpost.html", post_id=post_id, content=content, subject=subject, user=self.user)
+
+    def post(self):
+        subject = self.request.get("subject")
+        content = self.request.get("content")
+        post_id = self.request.get("post_id")
+        
+        post_to_edit = None
+        posts = db.GqlQuery("select * from Post")
+        for post in posts:
+            if post_id == str(post.key().id()):
+                post_to_edit=post
+                break
+
+        post_to_edit.subject = subject
+        post_to_edit.content = content
+        post.put()
+        time.sleep(1)
+        self.redirect("/myposts")
+
 
 class DeletePost(BaseHandler):
     def get(self):
