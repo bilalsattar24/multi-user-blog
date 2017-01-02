@@ -249,9 +249,13 @@ class NewPost(BaseHandler):
 
 class Myposts(BaseHandler):
     def get(self):
-        query = "select * from Post where creator_name='" + self.user.name + "'"
-        myposts = db.GqlQuery(query)
-        self.render("myposts.html", posts=myposts, user=self.user)
+        if self.user:
+            query = "select * from Post where creator_name='" + self.user.name + "'"
+            myposts = db.GqlQuery(query)
+            self.render("myposts.html", posts=myposts, user=self.user)
+        else:
+            msg = "Sign in to view your posts!"
+            self.render("login.html", error=msg)
 
 class Users(BaseHandler):
     def get(self):

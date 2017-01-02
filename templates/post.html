@@ -18,8 +18,8 @@
                 <div class="edit-delete col-sm-6"> 
                     <input type="hidden" name="post_id" value="{{post_id}}">
                     <button type="submit" class="btn btn-primary">Edit</button>
-                    <button type="submit" class="btn btn-primary">Sign In!</button>
-                    <a href="/delete">Delete</a> {{post_id}} 
+                    <button type="submit" class="btn btn-primary">Delete</button>
+                    <a href="/delete?post_id={{post_id}}">Delete</a> {{post_id}} 
                 </div>
             </form>
                 <div class="post-date col-sm-6">{{p.created.strftime("%B %d, %Y at %I:%M %p UTC by ")}}<strong>{{p.creator_name}}</strong></div>
