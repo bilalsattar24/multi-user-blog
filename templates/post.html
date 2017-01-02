@@ -14,14 +14,18 @@
     <div class="row">
     <div class="small">
         {% if user %}
-            <form action="edit" method="get">
-                <div class="edit-delete col-sm-6"> 
-                    <input type="hidden" name="post_id" value="{{post_id}}">
-                    <button type="submit" class="btn btn-primary">Edit</button>
-                    <button type="submit" class="btn btn-primary">Delete</button>
-                    <a href="/delete?post_id={{post_id}}">Delete</a> {{post_id}} 
-                </div>
+        <div class="edit-delete col-sm-3">
+            <form action="edit" method="get"> 
+                <input type="hidden" name="post_id" value="{{post_id}}">
+                <button type="submit" class="btn btn-primary">Edit</button>
+        </div>
             </form>
+        <div class="edit-delete col-sm-3">
+            <form action="delete" method="get">
+                <input type="hidden" name="post_id" value="{{post_id}}">
+                <button type="submit" class="btn btn-primary">Delete</button> 
+            </form>
+        </div>
                 <div class="post-date col-sm-6">{{p.created.strftime("%B %d, %Y at %I:%M %p UTC by ")}}<strong>{{p.creator_name}}</strong></div>
         {% else %}
             <div class=col-sm-6></div>

@@ -250,7 +250,7 @@ class NewPost(BaseHandler):
 class Myposts(BaseHandler):
     def get(self):
         if self.user:
-            query = "select * from Post where creator_name='" + self.user.name + "'"
+            query = "select * from Post where creator_name='" + self.user.name + "'order by created desc"
             myposts = db.GqlQuery(query)
             self.render("myposts.html", posts=myposts, user=self.user)
         else:
@@ -304,7 +304,19 @@ class EditPost(BaseHandler):
 
 class DeletePost(BaseHandler):
     def get(self):
-        post_id = self.requet.get("post_id")
+        posts = db.GqlQuery("select * from Post")
+        post_id = self.request.get("post_id")
+        post_to_delete = None
+        for post in posts:
+            if post_id == str(post.key().id()):
+                post_to_delete = post
+                break
+        if self.user:
+            print "successful delete"
+            self.redirect("/myposts")
+        else:
+            msg = "Sign in to delete your posts!"
+            self.render("login.html", error=msg)
         print post_id
 #----------------------------------------------------------------------
 app = webapp2.WSGIApplication([
