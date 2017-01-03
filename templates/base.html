@@ -25,12 +25,14 @@
             </div>
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li><a href="/">Home</a></li>
+                    <li>
+                        <a href="/"><span class="glyphicon glyphicon-home"></span> Home</a>
+                    </li>
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     {% if user %}
-                        <li><a href="/newpost">Submit Post</a></li>
-                        <li><a href="/myposts">My Posts</a><li>
+                        <li><a href="/newpost"><span class="glyphicon glyphicon-plus"></span> Submit Post</a></li>
+                        <li><a href="/myposts"><span class="glyphicon glyphicon-user"></span> My Posts</a><li>
                         <li><a style="color: red;" href="/logout">Log Out</a></li>
                     {% else %}
                         <li><a href="/login">Log In</a></li>

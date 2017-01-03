@@ -239,13 +239,6 @@ class NewPost(BaseHandler):
         p.put()
         time.sleep(1)#allows time for database to store new information to be displayed on front page
         self.redirect("/")
-        #self.write("content: " + p.content)
-        #self.write("<br>subject: " + p.subject)
-        #self.write(p.created)
-        #self.write(p.last_modified)
-        #self.write("<br>")
-        #self.write(p.user_id)
-        #p.put()
 
 class Myposts(BaseHandler):
     def get(self):
@@ -306,17 +299,17 @@ class DeletePost(BaseHandler):
     def get(self):
         posts = db.GqlQuery("select * from Post")
         post_id = self.request.get("post_id")
-        post_to_delete = None
+        self.redirect("/myposts")
         for post in posts:
             if post_id == str(post.key().id()):
                 post_to_delete = post
-                break
-        if self.user:
-            print "successful delete"
-            self.redirect("/myposts")
-        else:
-            msg = "Sign in to delete your posts!"
-            self.render("login.html", error=msg)
+                if self.user:
+                    post.delete()
+                    time.sleep(1)
+                    self.redirect("/myposts")
+                    break
+        msg = "Sign in to delete your posts!"
+        self.render("login.html", error=msg)
         print post_id
 #----------------------------------------------------------------------
 app = webapp2.WSGIApplication([
