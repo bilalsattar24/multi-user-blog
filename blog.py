@@ -317,7 +317,7 @@ class DeletePost(BaseHandler):
     def get(self):
         posts = db.GqlQuery("select * from Post")
         post_id = self.request.get("post_id")
-        self.redirect("/myposts")
+        #self.redirect("/myposts")
         for post in posts:
             if post_id == str(post.key().id()):
                 post_to_delete = post
@@ -332,8 +332,30 @@ class DeletePost(BaseHandler):
 
 class Like(BaseHandler):
     def get(self):
-        post_id=self.request.get("post_id")
-        self.write(post_id)
+        post_id = self.request.get("post_id")
+        posts = db.GqlQuery("select * from Post")
+        post_to_like = None
+        posted = False
+        for post in posts:
+            if post_id == str(post.key().id()):
+                post_to_like = post
+                break
+        if self.user:
+            user_id = str(self.user.key().id())
+            print("user_id: " + user_id)
+            likers = post_to_like.likers
+            for liker in likers:
+                if user_id == liker:#if post has already been liked by current user
+                    posted = True
+                    post_to_like.likers.remove(user_id)
+                    post_to_like.put()
+                    self.write(post.likers)
+                    break
+        if not posted:
+            post.likers.append((user_id))
+            post_to_like.put()
+            self.write(post.likers)
+        
 
 class Comments(BaseHandler):
     def get(self):
