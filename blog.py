@@ -138,7 +138,7 @@ class Post(db.Expando):
     def by_id(cls, post_id):
         return Post.get_by_id(post_id, parent = posts_key())
 
-    def render(self, user=None, post_id=None, loggedIn=None):
+    def render(self, user=None, post_id=None, username="", *a, **kw):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self, user=user, post_id=post_id)
 
@@ -146,6 +146,7 @@ class Comment(db.Model):
     post_id = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
+    username = db.StringProperty()
 
     def by_id(cls, post_id):
         return cls.get_by_id(post_id, parent = posts_key())
@@ -156,6 +157,9 @@ class Comment(db.Model):
 #------------HANDLERS---------------------------------------------------------
 class TestHandler(BaseHandler):
     def get(self):
+        comments = db.GqlQuery("select * from Comment")
+        for comment in comments:
+            comment.delete()
         self.response.write('Test passed')
 
 class FrontPage(BaseHandler):
@@ -163,7 +167,7 @@ class FrontPage(BaseHandler):
     def get(self):
         posts = db.GqlQuery("select * from Post order by created desc")
         if self.user:
-            self.render("front-page.html", posts=posts, user = self.user, loggedIn=True)
+            self.render("front-page.html", posts=posts, user = self.user, username=self.user.name)
         else:
             self.render("front-page.html", posts=posts)
 
@@ -262,7 +266,7 @@ class Myposts(BaseHandler):
         if self.user:
             query = "select * from Post where creator_name='" + self.user.name + "'order by created desc"
             myposts = db.GqlQuery(query)
-            self.render("myposts.html", posts=myposts, user=self.user)
+            self.render("myposts.html", posts=myposts, user=self.user, myposts=1)
         else:
             msg = "Sign in to view your posts!"
             self.render("login.html", error=msg)
@@ -367,24 +371,40 @@ class Like(BaseHandler):
 
 class Comments(BaseHandler):
     def get(self):
-        self.write("Comments")
+        post_id = str(self.request.get("post_id"))
+        comments = db.GqlQuery("select * from Comment")
+        for comment in comments:
+            if comment.post_id == post_id:
+                self.write(comment.username + ": ")
+                self.write(comment.content)
+                self.write("<br>")
+        self.write(comments)
 class NewComment(BaseHandler):
     def get(self):
         if not self.user:
             self.redirect('/login')
             return
+        comment = self.request.get("comment")
         post_id = self.request.get("post_id")
-        posts = db.GqlQuery("select * from Post")
-        post_to_comment = None
-        for post in posts:
-            if post_id == str(post.key().id()):
-                post_to_comment = post
-        self.render("newcomment.html", post=post_to_comment, user=self.user)
+        comment = Comment(content=comment, post_id=post_id, username=self.user.name)
+        comment.put()
+        time.sleep(1)
+        self.redirect('/')
+
+        #post_id = self.request.get("post_id")
+        #posts = db.GqlQuery("select * from Post")
+        #post_to_comment = None
+        #for post in posts:
+            #if post_id == str(post.key().id()):
+                #post_to_comment = post
+        #self.render("newcomment.html", post=post_to_comment, user=self.user)
     def post(self):
         comment = self.request.get("comment")
         post_id = self.request.get("post_id")
         comment = Comment(content=comment, post_id=post_id)
         comment.put()
+        time.sleep(1)
+        self.redirect('/')
 
 #----------------------------------------------------------------------
 app = webapp2.WSGIApplication([
