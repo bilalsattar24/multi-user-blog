@@ -26,7 +26,11 @@
         </div>
                 <div class="post-date col-sm-6">{{p.created.strftime("%B %d, %Y at %I:%M %p UTC by ")}}<strong>{{p.creator_name}}</strong></div>
         {% else %}
-            <div class=col-sm-6></div>
+            <div class=col-sm-6>
+                <a href="/like?post_id={{p.key().id()}}">Like</a>
+                &nbsp;
+                <a href="">Comment</a>
+            </div>
             <div class="post-date col-sm-6">{{p.created.strftime("%B %d, %Y at %I:%M %p UTC by ")}}<strong>{{p.creator_name}}</strong></div>
         {% endif %}
     </div>

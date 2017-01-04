@@ -88,6 +88,9 @@ def posts_key(group = 'default'):
 def blog_key(name = 'default'):
     return db.Key.from_path('blogs', name)
 
+def comments_key(group = 'default'):
+    return db.Key.from_path('comments', group)
+
 
 
 
@@ -121,12 +124,14 @@ class User(db.Model):
             return u
 
 
-class Post(db.Model):
+class Post(db.Expando):
     creator_name = db.StringProperty(required=True)
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
+    likers = db.StringListProperty()#user id's of people who liked
+    comments = db.StringListProperty() #comment id's for all comments on this post
 
     @classmethod
     def by_id(cls, post_id):
@@ -136,9 +141,22 @@ class Post(db.Model):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self, user=user, post_id=post_id)
 
+class Comment(db.Model):
+    post_id = db.StringProperty(required=True)
+    content = db.TextProperty(required=True)
+    created = db.DateTimeProperty(auto_now_add=True)
+
+    def by_id(cls, post_id):
+        return cls.get_by_id(post_id, parent = posts_key())
+
+    
+    
+
 #------------HANDLERS---------------------------------------------------------
 class TestHandler(BaseHandler):
     def get(self):
+        test = Test()
+        self.response.write(test.number)
         self.response.write('Test passed')
 
 class FrontPage(BaseHandler):
@@ -311,6 +329,19 @@ class DeletePost(BaseHandler):
         msg = "Sign in to delete your posts!"
         self.render("login.html", error=msg)
         print post_id
+
+class Like(BaseHandler):
+    def get(self):
+        post_id=self.request.get("post_id")
+        self.write(post_id)
+
+class Comments(BaseHandler):
+    def get(self):
+        self.write("Comments")
+class NewComment(BaseHandler):
+    def get(self):
+        self.write("NewComment")
+
 #----------------------------------------------------------------------
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
@@ -322,5 +353,8 @@ app = webapp2.WSGIApplication([
     ('/edit', EditPost),
     ('/delete', DeletePost),
     ('/logout', Logout),
-    ('/users', Users)
+    ('/users', Users),
+    ('/comments', Comments),
+    ('/newcomment', NewComment),
+    ('/like', Like)
 ], debug=True)
