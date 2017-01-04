@@ -347,6 +347,9 @@ class Like(BaseHandler):
                 post_to_like = post
                 break
         if self.user:
+            if post_to_like.creator_name == self.user.name:
+                self.redirect('/')
+                return
             user_id = str(self.user.key().id())
             print("user_id: " + user_id)
             likers = post_to_like.likers
