@@ -138,7 +138,7 @@ class Post(db.Expando):
     def by_id(cls, post_id):
         return Post.get_by_id(post_id, parent = posts_key())
 
-    def render(self, user=None, post_id=None):
+    def render(self, user=None, post_id=None, loggedIn=None):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self, user=user, post_id=post_id)
 
@@ -163,7 +163,7 @@ class FrontPage(BaseHandler):
     def get(self):
         posts = db.GqlQuery("select * from Post order by created desc")
         if self.user:
-            self.render("front-page.html", posts=posts, user = self.user)
+            self.render("front-page.html", posts=posts, user = self.user, loggedIn=True)
         else:
             self.render("front-page.html", posts=posts)
 
@@ -331,6 +331,9 @@ class DeletePost(BaseHandler):
 
 class Like(BaseHandler):
     def get(self):
+        if not self.user:
+            self.redirect('/login')
+            return
         post_id = self.request.get("post_id")
         posts = db.GqlQuery("select * from Post")
         post_to_like = None
@@ -367,6 +370,9 @@ class Comments(BaseHandler):
         self.write("Comments")
 class NewComment(BaseHandler):
     def get(self):
+        if not self.user:
+            self.redirect('/login')
+            return
         post_id = self.request.get("post_id")
         posts = db.GqlQuery("select * from Post")
         post_to_comment = None
