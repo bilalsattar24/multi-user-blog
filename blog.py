@@ -131,6 +131,7 @@ class Post(db.Expando):
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
     likers = db.StringListProperty()#user id's of people who liked
+    numLikes = db.IntegerProperty()
     comments = db.StringListProperty() #comment id's for all comments on this post
 
     @classmethod
@@ -155,8 +156,6 @@ class Comment(db.Model):
 #------------HANDLERS---------------------------------------------------------
 class TestHandler(BaseHandler):
     def get(self):
-        test = Test()
-        self.response.write(test.number)
         self.response.write('Test passed')
 
 class FrontPage(BaseHandler):
@@ -253,7 +252,7 @@ class NewPost(BaseHandler):
         subject = self.request.get("subject")
         content = self.request.get("content")
         creator = self.request.get("creator_name")
-        p = Post(subject=subject, content=content, creator_name=creator)
+        p = Post(subject=subject, content=content, creator_name=creator, numLikes=0)
         p.put()
         time.sleep(1)#allows time for database to store new information to be displayed on front page
         self.redirect("/")
@@ -348,13 +347,19 @@ class Like(BaseHandler):
                 if user_id == liker:#if post has already been liked by current user
                     posted = True
                     post_to_like.likers.remove(user_id)
+                    post_to_like.numLikes -= 1
                     post_to_like.put()
-                    self.write(post.likers)
+                    self.redirect('/')
+                    time.sleep(1)
+                    #self.write(post.likers)
                     break
         if not posted:
             post.likers.append((user_id))
+            post_to_like.numLikes += 1
             post_to_like.put()
-            self.write(post.likers)
+            time.sleep(1)
+            self.redirect('/')
+            #self.write(post.likers)
         
 
 class Comments(BaseHandler):
@@ -362,7 +367,18 @@ class Comments(BaseHandler):
         self.write("Comments")
 class NewComment(BaseHandler):
     def get(self):
-        self.write("NewComment")
+        post_id = self.request.get("post_id")
+        posts = db.GqlQuery("select * from Post")
+        post_to_comment = None
+        for post in posts:
+            if post_id == str(post.key().id()):
+                post_to_comment = post
+        self.render("newcomment.html", post=post_to_comment, user=self.user)
+    def post(self):
+        comment = self.request.get("comment")
+        post_id = self.request.get("post_id")
+        comment = Comment(content=comment, post_id=post_id)
+        comment.put()
 
 #----------------------------------------------------------------------
 app = webapp2.WSGIApplication([
