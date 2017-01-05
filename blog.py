@@ -133,6 +133,7 @@ class Post(db.Expando):
     likers = db.StringListProperty()#user id's of people who liked
     numLikes = db.IntegerProperty()
     comments = db.StringListProperty() #comment id's for all comments on this post
+    numComments = db.IntegerProperty(required=True)
 
     @classmethod
     def by_id(cls, post_id):
@@ -150,7 +151,6 @@ class Comment(db.Model):
 
     def by_id(cls, post_id):
         return cls.get_by_id(post_id, parent = posts_key())
-
     
     
 
@@ -158,6 +158,9 @@ class Comment(db.Model):
 class TestHandler(BaseHandler):
     def get(self):
         comments = db.GqlQuery("select * from Comment")
+        posts = db.GqlQuery("select * from Post")
+        for post in posts:
+            post.delete()
         for comment in comments:
             comment.delete()
         self.response.write('Test passed')
@@ -256,7 +259,7 @@ class NewPost(BaseHandler):
         subject = self.request.get("subject")
         content = self.request.get("content")
         creator = self.request.get("creator_name")
-        p = Post(subject=subject, content=content, creator_name=creator, numLikes=0)
+        p = Post(subject=subject, content=content, creator_name=creator, numLikes=0, numComments=0)
         p.put()
         time.sleep(1)#allows time for database to store new information to be displayed on front page
         self.redirect("/")
@@ -266,7 +269,7 @@ class Myposts(BaseHandler):
         if self.user:
             query = "select * from Post where creator_name='" + self.user.name + "'order by created desc"
             myposts = db.GqlQuery(query)
-            self.render("myposts.html", posts=myposts, user=self.user, myposts=1)
+            self.render("myposts.html", posts=myposts, user=self.user)
         else:
             msg = "Sign in to view your posts!"
             self.render("login.html", error=msg)
@@ -375,13 +378,23 @@ class Like(BaseHandler):
 class Comments(BaseHandler):
     def get(self):
         post_id = str(self.request.get("post_id"))
-        comments = db.GqlQuery("select * from Comment")
+        comments = db.GqlQuery("select * from Comment order by created desc")
+        posts = db.GqlQuery("select * from Post")
+        for post in posts:
+            if post_id == str(post.key().id()):
+                post_to_pass = post
+                break
+        commentList = []
         for comment in comments:
             if comment.post_id == post_id:
-                self.write(comment.username + ": ")
-                self.write(comment.content)
-                self.write("<br>")
-        self.write(comments)
+                commentList.append(comment)
+                #self.write(comment.username + ": ")
+                #self.write(comment.content)
+                #self.write("<br>")
+        #for c in commentList:
+            #self.write(c.username + ": ")
+            #self.write(c.content)
+        self.render("comments.html", comments=commentList, post=post, user=self.user)
 class NewComment(BaseHandler):
     def get(self):
         if not self.user:
@@ -389,10 +402,19 @@ class NewComment(BaseHandler):
             return
         comment = self.request.get("comment")
         post_id = self.request.get("post_id")
+        posts = db.GqlQuery("select * from Post")
+        for post in posts:
+            if post_id == str(post.key().id()):
+                post_to_comment = post
+                break
+
+        
         comment = Comment(content=comment, post_id=post_id, username=self.user.name)
         comment.put()
+        post_to_comment.numComments += 1
+        post_to_comment.put()
         time.sleep(1)
-        self.redirect('/')
+        self.redirect("/post?post_id={{p.key().id()}}")
 
         #post_id = self.request.get("post_id")
         #posts = db.GqlQuery("select * from Post")
@@ -404,10 +426,35 @@ class NewComment(BaseHandler):
     def post(self):
         comment = self.request.get("comment")
         post_id = self.request.get("post_id")
+        posts = db.GqlQuery("select * from Post")
+        for post in posts:
+            if post_id == str(post.key().id()):
+                post_to_comment = post
+                break
+        
         comment = Comment(content=comment, post_id=post_id)
         comment.put()
+        post_to_comment.numComments += 1
+        post_to_comment.put()
         time.sleep(1)
-        self.redirect('/')
+        self.redirect("/post?post_id={{p.key().id()}}")
+
+class PostPage(BaseHandler):
+    def get(self):
+        post_id = self.request.get("post_id")
+        post_to_view = None
+        #$84.98 - spectrum
+
+        posts = db.GqlQuery("select * from Post")
+        comments = db.GqlQuery("select * from Comment order by created desc")
+        self.write(comments)
+        for comment in comments:
+            if comment.post_id == str(post_id):
+                print ("inloop")
+        for post in posts:
+            if post_id == str(post.key().id()):
+                post_to_view = post
+        self.render("permalink.html", user=self.user, post=post)
 
 #----------------------------------------------------------------------
 app = webapp2.WSGIApplication([
@@ -423,5 +470,6 @@ app = webapp2.WSGIApplication([
     ('/users', Users),
     ('/comments', Comments),
     ('/newcomment', NewComment),
-    ('/like', Like)
+    ('/like', Like),
+    ('/post', PostPage)
 ], debug=True)

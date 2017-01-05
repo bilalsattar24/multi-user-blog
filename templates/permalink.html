@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+        <div class="col-md-12 text-center">
+            <h1>Subject: "{{post.subject}}"</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <hr class="separator">
+        </div>
+    </div>
+  {{post.render() | safe}}
+  <hr>
+  <script>
+      var x = document.getElementById("view-comments");
+      x.innerHTML="";
+      x = document.getElementById("comment-form");
+      x.innerHTML="";
+  </script>
+{% endblock %}
