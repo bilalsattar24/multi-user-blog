@@ -1,4 +1,10 @@
-#imports
+#Title: Multi-User-Blog
+#Author: Bilal Sattar
+#Description: This is the backend for the Udacity's
+#   Multi-user blog project. 
+#Date: 1/5/2017
+
+#-----------------------------Imports---------------------------------------
 import os
 import re
 import time
@@ -10,12 +16,12 @@ import hmac
 import hashlib
 from google.appengine.ext import db
 
+#------------------------------Variables--------------------------------------
+secret = "thisIsASecret"
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
-
-secret = "thisIsASecret"
-#functions for hashing and verifying hash
+#------------------------------Functions--------------------------------------
 def make_hash(original):
     return hashlib.sha256(secret + original).hexdigest()
 
@@ -27,13 +33,38 @@ def check_secure_val(secure_val):
     if secure_val == make_secure_val(val):
         return val
 
-
-
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
-#------------------------------------------------------------
-#base class for handler. other handlers inherit from 
+
+def make_salt(length = 5):
+    return ''.join(random.choice(letters) for x in xrange(length))
+
+def make_pw_hash(name, pw, salt = None):
+    if not salt:
+        salt = make_salt()
+    h = hashlib.sha256(name + pw + salt).hexdigest()
+    return '%s,%s' % (salt, h)
+
+def valid_pw(name, password, h):
+    salt = h.split(',')[0]
+    return h == make_pw_hash(name, password, salt)
+
+def users_key(group = 'default'):
+    return db.Key.from_path('users', group)
+
+def posts_key(group = 'default'):
+    return db.Key.from_path('posts', group)
+
+def blog_key(name = 'default'):
+    return db.Key.from_path('blogs', name)
+
+def comments_key(group = 'default'):
+    return db.Key.from_path('comments', group)
+#-----------------------------------------------------------------------------
+#This Base class has necessary methods for all othe handlers and inherits the
+#   necessary webapp2.RequestHandler
+# All other handlers will inherif from this class
 class BaseHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
@@ -65,41 +96,11 @@ class BaseHandler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
-#------------------------------------------------------------------------------
-def make_salt(length = 5):
-    return ''.join(random.choice(letters) for x in xrange(length))
-
-def make_pw_hash(name, pw, salt = None):
-    if not salt:
-        salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s,%s' % (salt, h)
-
-def valid_pw(name, password, h):
-    salt = h.split(',')[0]
-    return h == make_pw_hash(name, password, salt)
-
-def users_key(group = 'default'):
-    return db.Key.from_path('users', group)
-
-def posts_key(group = 'default'):
-    return db.Key.from_path('posts', group)
-
-def blog_key(name = 'default'):
-    return db.Key.from_path('blogs', name)
-
-def comments_key(group = 'default'):
-    return db.Key.from_path('comments', group)
-
-
-
-
-
-#------------CLASSES FOR OBJECTS----------------------------------------------
+#------------------------CLASSES FOR OBJECTS----------------------------------
 class User(db.Model):
     name = db.StringProperty(required=True)
     pw_hash = db.StringProperty(required=True)
-    email = db.StringProperty()
+    email = db.StringProperty() #future update will allow for emails
 
     @classmethod
     def by_id(cls, uid):
@@ -130,9 +131,9 @@ class Post(db.Expando):
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     last_modified = db.DateTimeProperty(auto_now=True)
-    likers = db.StringListProperty()#user id's of people who liked
+    likers = db.StringListProperty()#list of user id's of people who liked
     numLikes = db.IntegerProperty()
-    comments = db.StringListProperty() #comment id's for all comments on this post
+    comments = db.StringListProperty() #list of comment id's for all comments on this post
     numComments = db.IntegerProperty(required=True)
 
     @classmethod
@@ -151,14 +152,16 @@ class Comment(db.Model):
 
     def by_id(cls, post_id):
         return cls.get_by_id(post_id, parent = posts_key())
-    
-    
 
-#------------HANDLERS---------------------------------------------------------
-class TestHandler(BaseHandler):
+
+#--------------------------------HANDLERS-------------------------------------
+class TestHandler(BaseHandler):#clears all items in google datastore
     def get(self):
         comments = db.GqlQuery("select * from Comment")
         posts = db.GqlQuery("select * from Post")
+        users = db.GqlQuery("select * from Users")
+        for user in users:
+            user.delete()
         for post in posts:
             post.delete()
         for comment in comments:
@@ -166,7 +169,6 @@ class TestHandler(BaseHandler):
         self.response.write('Test passed')
 
 class FrontPage(BaseHandler):
-    
     def get(self):
         posts = db.GqlQuery("select * from Post order by created desc")
         if self.user:
@@ -204,7 +206,6 @@ class Signup(BaseHandler):
                 return True
         return False
         
-
     def render_page(self, username="", password="", error=""):
         self.render("signup.html", username=username, password=password, error=error)
 
@@ -245,6 +246,7 @@ class Signup(BaseHandler):
             error = "No username or password provided"
             self.render_page(error=error)
 
+
 class NewPost(BaseHandler):
     def get(self):
         if self.user:
@@ -252,7 +254,6 @@ class NewPost(BaseHandler):
         else:
             msg = "You need an account to post!"
             self.render("signup.html", error=msg)
-            
 
     def post(self):
 
@@ -264,6 +265,7 @@ class NewPost(BaseHandler):
         time.sleep(1)#allows time for database to store new information to be displayed on front page
         self.redirect("/")
 
+
 class Myposts(BaseHandler):
     def get(self):
         if self.user:
@@ -274,12 +276,14 @@ class Myposts(BaseHandler):
             msg = "Sign in to view your posts!"
             self.render("login.html", error=msg)
 
-class Users(BaseHandler):
+
+class Users(BaseHandler):#this handler shows list of users for debugging
     def get(self):
         users = db.GqlQuery("select * from User")
         for user in users:
             self.write("name: " + user.name + " pass: " + user.pw_hash)
             self.write("<br>")
+
 
 class Logout(BaseHandler):
     def get(self):
@@ -296,8 +300,8 @@ class EditPost(BaseHandler):
             if post_id == str(post.key().id()):
                 subject = post.subject
                 content = post.content
-                break
-                
+                break  
+ 
         self.render("editpost.html", post_id=post_id, content=content, subject=subject, user=self.user)
 
     def post(self):
@@ -336,6 +340,7 @@ class DeletePost(BaseHandler):
         self.render("login.html", error=msg)
         print post_id
 
+
 class Like(BaseHandler):
     def get(self):
         if not self.user:
@@ -364,7 +369,6 @@ class Like(BaseHandler):
                     post_to_like.put()
                     self.redirect('/')
                     time.sleep(1)
-                    #self.write(post.likers)
                     break
         if not posted:
             post.likers.append((user_id))
@@ -372,7 +376,7 @@ class Like(BaseHandler):
             post_to_like.put()
             time.sleep(1)
             self.redirect('/')
-            #self.write(post.likers)
+
         
 
 class Comments(BaseHandler):
@@ -388,13 +392,9 @@ class Comments(BaseHandler):
         for comment in comments:
             if comment.post_id == post_id:
                 commentList.append(comment)
-                #self.write(comment.username + ": ")
-                #self.write(comment.content)
-                #self.write("<br>")
-        #for c in commentList:
-            #self.write(c.username + ": ")
-            #self.write(c.content)
         self.render("comments.html", comments=commentList, post=post, user=self.user)
+
+
 class NewComment(BaseHandler):
     def get(self):
         if not self.user:
@@ -408,7 +408,6 @@ class NewComment(BaseHandler):
                 post_to_comment = post
                 break
 
-        
         comment = Comment(content=comment, post_id=post_id, username=self.user.name)
         comment.put()
         post_to_comment.numComments += 1
@@ -416,13 +415,6 @@ class NewComment(BaseHandler):
         time.sleep(1)
         self.redirect("/post?post_id={{p.key().id()}}")
 
-        #post_id = self.request.get("post_id")
-        #posts = db.GqlQuery("select * from Post")
-        #post_to_comment = None
-        #for post in posts:
-            #if post_id == str(post.key().id()):
-                #post_to_comment = post
-        #self.render("newcomment.html", post=post_to_comment, user=self.user)
     def post(self):
         comment = self.request.get("comment")
         post_id = self.request.get("post_id")
@@ -456,7 +448,7 @@ class PostPage(BaseHandler):
                 post_to_view = post
         self.render("permalink.html", user=self.user, post=post)
 
-#----------------------------------------------------------------------
+#-------------------------------Handler Mappings------------------------------
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
     ('/test', TestHandler),
