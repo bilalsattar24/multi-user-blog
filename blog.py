@@ -491,5 +491,6 @@ app = webapp2.WSGIApplication([
     ('/newcomment', NewComment),
     ('/like', Like),
     ('/deletecomment', DeleteComment),
+    ('/editcomment', EditComment),
     ('/post', PostPage)
 ], debug=True)
