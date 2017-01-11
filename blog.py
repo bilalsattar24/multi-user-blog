@@ -474,7 +474,9 @@ class DeleteComment(BaseHandler):
             time.sleep(1)
             return self.redirect("/comments?post_id="+post_id)
 
-
+class EditComment(BaseHandler):
+    def get(self):
+        
 #-------------------------------Handler Mappings------------------------------
 app = webapp2.WSGIApplication([
     ('/', FrontPage),
