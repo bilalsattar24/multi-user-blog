@@ -211,9 +211,13 @@ class Signup(BaseHandler):
         self.render("signup.html", username=username, password=password, error=error)
 
     def get(self):
+        if self.user:
+            return self.redirect("/myposts")
         self.render_page()
 
     def post(self):
+        if self.user:
+            return self.redirect("/myposts")
         username = self.request.get("username")
         password = self.request.get("password")#original password
         password2 = self.request.get("verify-password")#re-entered password
@@ -458,12 +462,10 @@ class DeleteComment(BaseHandler):
         for post in posts:
             if post_id == str(post.key().id()):
                 post_to_alter = post
-                print ("post loop if")
 
         for comment in comments:
             if comment_id == str(comment.key().id()):
                 comment_to_delete = comment
-                print ("comment loop if")
 
         if self.user.name == comment.username:
             print ("self.user.name: "+self.user.name)
@@ -476,7 +478,37 @@ class DeleteComment(BaseHandler):
 
 class EditComment(BaseHandler):
     def get(self):
+        comment_id = self.request.get("comment_id")
+        post_id = post_id = self.request.get("post_id")
+        comments = db.GqlQuery("select * from Comment")
+        for comment in comments:
+            if comment_id == str(comment.key().id()):
+                comment_to_edit = comment
+                break
+        if not comment_to_edit.username == self.user.name:
+            return self.redirect("/")
         
+        self.render("editcomment.html", user=self.user, comment=comment_to_edit, post_id=post_id)
+    
+    def post(self):
+        comment_id = self.request.get("comment_id")
+        post_id = post_id = self.request.get("post_id")
+        new_comment = self.request.get("new_comment")
+        comments = db.GqlQuery("select * from Comment")
+        for comment in comments:
+            if comment_id == str(comment.key().id()):
+                comment_to_edit = comment
+                break
+        if not comment_to_edit.username == self.user.name:
+            return self.redirect("/")
+        
+        comment_to_edit.content = new_comment
+        comment_to_edit.put()
+        time.sleep(1)
+        return self.redirect("/comments?post_id="+post_id)
+
+        
+
 #-------------------------------Handler Mappings------------------------------
 app = webapp2.WSGIApplication([
     ('/', FrontPage),

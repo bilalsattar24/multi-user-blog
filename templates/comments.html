@@ -20,7 +20,7 @@
 
             {% if user.name == c.username %}
                 <div class="col-sm-2 well well-sm">
-                    <a href="/edditcomment"><span class="glyphicon glyphicon-edit"></span> Edit</a>
+                    <a href="/editcomment?comment_id={{c.key().id()}}&post_id={{post.key().id()}}"><span class="glyphicon glyphicon-edit"></span> Edit</a>
                     &nbsp;
                     <a class="error" href="/deletecomment?comment_id={{c.key().id()}}&post_id={{post.key().id()}}"><span class="glyphicon glyphicon-edit"></span> Delete</a>
                 </div>

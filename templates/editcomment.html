@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <h1>Edit Comment</h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <hr class="separator">
+        </div>
+    </div>
+    <form method="post">
+        <input type="hidden" name="comment_id" value="{{comment.key().id()}}">
+        <div class="form-group">
+            <label for="new_comment">Comment: </label>
+            <input type="text" name="new_comment" class="form-control" value="{{comment.content}}" placeholder="Comment">
+        </div>
+        <button type="submit" class="btn btn-success">Change comment!</button>
+        <a href="/comments?post_id={{comment.post_id}}" class="btn btn-danger" role="button">Cancel</a>
+    </form>
+{% endblock %}
