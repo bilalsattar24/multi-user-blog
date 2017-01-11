@@ -25,6 +25,9 @@
     text-align: left;
     float: left;
 }
+.righty {
+    text-align: right;
+}
 .lefty {
     float: left;
 }

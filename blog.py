@@ -144,6 +144,7 @@ class Post(db.Expando):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self, user=user, post_id=post_id)
 
+
 class Comment(db.Model):
     post_id = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
@@ -256,6 +257,8 @@ class NewPost(BaseHandler):
             self.render("signup.html", error=msg)
 
     def post(self):
+        if not self.user:
+            return self.redirect('/login')
 
         subject = self.request.get("subject")
         content = self.request.get("content")
@@ -435,14 +438,10 @@ class PostPage(BaseHandler):
     def get(self):
         post_id = self.request.get("post_id")
         post_to_view = None
-        #$84.98 - spectrum
 
         posts = db.GqlQuery("select * from Post")
         comments = db.GqlQuery("select * from Comment order by created desc")
         self.write(comments)
-        for comment in comments:
-            if comment.post_id == str(post_id):
-                print ("inloop")
         for post in posts:
             if post_id == str(post.key().id()):
                 post_to_view = post
