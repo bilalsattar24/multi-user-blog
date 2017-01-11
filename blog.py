@@ -160,7 +160,7 @@ class TestHandler(BaseHandler):#clears all items in google datastore
     def get(self):
         comments = db.GqlQuery("select * from Comment")
         posts = db.GqlQuery("select * from Post")
-        users = db.GqlQuery("select * from Users")
+        users = db.GqlQuery("select * from User")
         for user in users:
             user.delete()
         for post in posts:
@@ -446,6 +446,34 @@ class PostPage(BaseHandler):
             if post_id == str(post.key().id()):
                 post_to_view = post
         self.render("permalink.html", user=self.user, post=post)
+class DeleteComment(BaseHandler):
+    def get(self):
+        comment_id = self.request.get("comment_id")
+        post_id = self.request.get("post_id")
+        comment_to_delete = None
+        post_to_alter = None
+        comments = db.GqlQuery("select * from Comment")
+        posts = db.GqlQuery("select * from Post")
+
+        for post in posts:
+            if post_id == str(post.key().id()):
+                post_to_alter = post
+                print ("post loop if")
+
+        for comment in comments:
+            if comment_id == str(comment.key().id()):
+                comment_to_delete = comment
+                print ("comment loop if")
+
+        if self.user.name == comment.username:
+            print ("self.user.name: "+self.user.name)
+            print ("comment.username: "+comment.username)
+            post_to_alter.numComments -= 1
+            post.put()
+            comment_to_delete.delete()
+            time.sleep(1)
+            return self.redirect("/comments?post_id="+post_id)
+
 
 #-------------------------------Handler Mappings------------------------------
 app = webapp2.WSGIApplication([
@@ -462,5 +490,6 @@ app = webapp2.WSGIApplication([
     ('/comments', Comments),
     ('/newcomment', NewComment),
     ('/like', Like),
+    ('/deletecomment', DeleteComment),
     ('/post', PostPage)
 ], debug=True)
