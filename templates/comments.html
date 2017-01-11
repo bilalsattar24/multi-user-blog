@@ -12,11 +12,19 @@
     </div>
     {% for c in comments %}
         <div class="row">
-            <div class="col-sm-12">                            
+            <div class="col-sm-11">                            
                 <div class="well well-sm">
                     <strong>{{c.username}}: </strong> {{c.content}}
                 </div>
             </div>
+
+            {% if user.name == c.username %}
+                <div class="col-sm-1 well well-sm">
+                    edit delete
+                </div>
+            {% endif %}
+
+                
         </div>
     {% endfor %}
 {% endblock %}
