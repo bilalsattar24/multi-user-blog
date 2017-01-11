@@ -16,11 +16,11 @@
         <div class="edit-delete col-sm-6">
             <form class="lefty" action="edit" method="get"> 
                 <input type="hidden" name="post_id" value="{{post_id}}">
-                <button type="submit" class="btn btn-primary">Edit</button>
+                <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-edit"></span> Edit</button>
             </form>
             <form class="lefty" id="second" action="delete" method="get">
                 <input type="hidden" name="post_id" value="{{post_id}}">
-                <button class="btn btn-danger" type="submit" class="btn btn-primary">Delete</button> 
+                <button class="btn btn-danger" type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-remove"></span> Delete</button> 
             </form>
         </div>
         <div class="post-date col-sm-6">{{p.created.strftime("%B %d, %Y at %I:%M %p UTC by ")}}<strong>{{p.creator_name}}</strong></div>
