@@ -4,6 +4,7 @@
 #   Multi-user blog project. 
 #Date: 1/5/2017
 
+
 #-----------------------------Imports---------------------------------------
 import os
 import re
@@ -307,8 +308,10 @@ class EditPost(BaseHandler):
             if post_id == str(post.key().id()):
                 subject = post.subject
                 content = post.content
+                post_to_edit = post
                 break  
- 
+        if not self.user.name not == post_to_edit.creator_name:
+            return self.redirect('/')
         self.render("editpost.html", post_id=post_id, content=content, subject=subject, user=self.user)
 
     def post(self):
@@ -322,6 +325,9 @@ class EditPost(BaseHandler):
             if post_id == str(post.key().id()):
                 post_to_edit=post
                 break
+        
+        if not self.user.name not == post_to_edit.creator_name:
+            return self.redirect('/')
 
         post_to_edit.subject = subject
         post_to_edit.content = content
@@ -334,19 +340,18 @@ class DeletePost(BaseHandler):
     def get(self):
         posts = db.GqlQuery("select * from Post")
         post_id = self.request.get("post_id")
-        #self.redirect("/myposts")
+
         for post in posts:
             if post_id == str(post.key().id()):
                 post_to_delete = post
-                if self.user:
+                if self.user.name == post_to_delete.creator_name:
                     post.delete()
                     time.sleep(1)
-                    self.redirect("/myposts")
-                    break
+                    return self.redirect("/myposts")
+                    
         msg = "Sign in to delete your posts!"
         self.render("login.html", error=msg)
         print post_id
-
 
 class Like(BaseHandler):
     def get(self):
@@ -486,7 +491,7 @@ class EditComment(BaseHandler):
                 comment_to_edit = comment
                 break
         if not comment_to_edit.username == self.user.name:
-            return self.redirect("/")
+            return self.redirect("/login")
         
         self.render("editcomment.html", user=self.user, comment=comment_to_edit, post_id=post_id)
     
@@ -500,14 +505,12 @@ class EditComment(BaseHandler):
                 comment_to_edit = comment
                 break
         if not comment_to_edit.username == self.user.name:
-            return self.redirect("/")
+            return self.redirect("/login")
         
         comment_to_edit.content = new_comment
         comment_to_edit.put()
         time.sleep(1)
         return self.redirect("/comments?post_id="+post_id)
-
-        
 
 #-------------------------------Handler Mappings------------------------------
 app = webapp2.WSGIApplication([
