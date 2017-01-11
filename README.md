@@ -9,4 +9,3 @@
     <li>Select the project in App Engine and hit run</li>
     <li>After it runs, right click and hit browse</li>
 </ol>
-
