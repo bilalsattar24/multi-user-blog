@@ -228,7 +228,6 @@ class Post(db.Expando):
         """
         return Post.get_by_id(post_id, parent=posts_key())
 
-    @classmethod
     def render(self, user=None, post_id=None, username="", *a, **kw):
         """
             replaces new lines with html <br> then renders page
@@ -280,7 +279,8 @@ class FrontPage(BaseHandler):
     def get(self):
         posts = db.GqlQuery("select * from Post order by created desc")
         if self.user:
-            self.render("front-page.html", posts=posts, user=self.user, username=self.user.name)
+            self.render("front-page.html", posts=posts,
+                        user=self.user, username=self.user.name)
         else:
             self.render("front-page.html", posts=posts)
 
@@ -395,7 +395,8 @@ class NewPost(BaseHandler):
 class Myposts(BaseHandler):
     def get(self):
         if self.user:
-            query = "select * from Post where creator_name='" + self.user.name + "'order by created desc"
+            query = "select * from Post where creator_name='" + \
+                    self.user.name + "'order by created desc"
             myposts = db.GqlQuery(query)
             self.render("myposts.html", posts=myposts, user=self.user)
         else:
