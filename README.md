@@ -7,7 +7,8 @@
     https://cloud.google.com/appengine/downloads#Google_App_Engine_SDK_for_Python</li>
     <li>Clone this Repository to a known destination such as Desktop</li>
     <li>Using Terminal or other command line tool, go to location of the folder then run the development server. Example 
-        <code>cd /Users/Desktop/multi-user-blog\n</code>
+        <code>cd /Users/Desktop/multi-user-blog</code>
+        </br>
         <code>dev_appserver.py multi-user-blog</code>
     </li>
     <li>Visit <code>http://localhost:8080</code>to see the running blog</li>
